@@ -7,9 +7,37 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 
 contract UniversityDegree is ERC721URIStorage{
+
+    address owner;
     using  Counters for Counters.Counter;
+    Counters.Counter private  _tokenIds;
 
     constructor() ERC721("UniversityDegree", "Degree"){
+        owner = msg.sender;
+    }
+
+    mapping(address => bool) public  issuedDegrees;
+
+    modifier  onlyOwner(){
+        require(msg.sender == owner);
+        _;
+    }
+
+    function issueDegree(address to) onlyOwner external {
+            issuedDegrees[to] = true;
+    }
+
+    function claimDegree(string memory tokenURI)  public  returns  (uint256){       
+            require(issuedDegrees[msg.sender], "Degree not issued");
+            _tokenIds.increment();
+            uint256 newItemId = _tokenIds.current();
+            _mint(msg.sender, newItemId);
+            _setTokenURI(newItemId, tokenURI);
+        personToDegree[msg.sender] = tokenURI;
+        issuedDegrees[msg.sender] = false; // Claimed Degree
+      return  newItemId;
 
     }
+
+    mapping(address => string) personToDegree;
 }
